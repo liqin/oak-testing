@@ -6,8 +6,9 @@ package com.headwire.app;
  */
 public class CreateRepositoryTest {
 
-    public CreateRepositoryTest() {
-        
+	public static void main(String[] args) {
+        System.out.println("Running tests!");
+
     }
 
     
