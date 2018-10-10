@@ -17,6 +17,19 @@ public class CreateRepository {
 
     public static void main (String[] args) {
         
+    	// Test adding a node
+    	addNode();
+    	
+    	// Test indexing some node
+    	
+    	// Test facet search node
+
+    }
+    
+    
+    // class to test adding a node
+    private static void addNode() {
+    	
     	// Create repository
     	Repository repo = new Jcr(new Oak()).createRepository();
     	
@@ -41,13 +54,8 @@ public class CreateRepository {
 			e.printStackTrace();
 		}
         
-    	// Todo: add nodes
-    	
     	// Logout from repository
     	session.logout();
-
-    	
-    	
     }
 
     
