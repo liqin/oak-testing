@@ -15,7 +15,7 @@ import org.apache.jackrabbit.oak.jcr.Jcr;
  */
 public class CreateRepository {
 
-    public CreateRepository() {
+    public static void main (String[] args) {
         
     	// Create repository
     	Repository repo = new Jcr(new Oak()).createRepository();
