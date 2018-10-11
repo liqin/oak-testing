@@ -89,16 +89,16 @@ public class LuceneJcr {
         Node rules = lucene.addNode("indexRules", "nt:unstructured");
         Node allProps = rules.addNode("nt:base")
                 .addNode("properties", "nt:unstructured")
-                .addNode("tags", "nt:unstructured");
-        allProps.setProperty("name", "tags");
+                .addNode("oaktags", "nt:unstructured");
+        allProps.setProperty("name", "oaktags");
         allProps.setProperty("propertyIndex", true);
         allProps.setProperty("facets", true); 
-        
+        /*
         Node jcrContent = lucene.addNode("facets", "nt:unstructured")
         		.addNode("jcr:content", "nt:unstructured");
         jcrContent.setProperty("multivalued", true);
-        Node facet = jcrContent.addNode("tags", "nt:unstructured"); 
-        facet.setProperty("multivalued", true);
+        Node facet = jcrContent.addNode("oaktags", "nt:unstructured"); 
+        facet.setProperty("multivalued", true); */
         /*
         Node allProps = rules.addNode("nt:base")
                 .addNode("properties", "nt:unstructured")
@@ -125,17 +125,17 @@ public class LuceneJcr {
         Node test1 = node1.addNode("test");
         test1.setProperty("title", "torgeir1");
         String[] tags1 = {"tag1","tag2","tag3"};
-        test1.setProperty("tags", tags1, 1);
+        test1.setProperty("oaktags", tags1, 1);
         Node node2 = content.addNode("node2");
         Node test2 = node2.addNode("test");
         test2.setProperty("title", "torgeir2");
         String[] tags2 = {"tag4","tag5","tag6"};
-        test2.setProperty("tags", tags2, 1);
+        test2.setProperty("oaktags", tags2, 1);
         Node node3 = content.addNode("node3");
         Node test3 = node3.addNode("test");
         test3.setProperty("title", "torgeir");
         String[] tags3 = {"tag7","tag8","tag9"};
-        test3.setProperty("tags", tags3, 1);
+        test3.setProperty("oaktags", tags3, 1);
         
         session.save();
         session.logout();
@@ -150,7 +150,7 @@ public class LuceneJcr {
 
         QueryManager qm  =session.getWorkspace().getQueryManager();
         // test
-        String myQuery = "SELECT [jcr:path], [rep:facet(tags)] FROM [nt:base] AS s WHERE ISDESCENDANTNODE([/content/node1])";
+        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [nt:base] AS s WHERE ISDESCENDANTNODE([/content/node1])";
         final Query q = qm.createQuery(myQuery, Query.JCR_SQL2);
         QueryResult result = q.execute();
         
@@ -165,7 +165,7 @@ public class LuceneJcr {
         Set<String> dimensions = facetResult.getDimensions(); // { "tags" }
         System.out.println("set size:" + dimensions.size());
         if(dimensions.size() > 0) {
-	        List<FacetResult.Facet> facets = facetResult.getFacets("tags");
+	        List<FacetResult.Facet> facets = facetResult.getFacets("oaktags");
 	        for (FacetResult.Facet facet : facets) {
 	            String label = facet.getLabel();
 	            int count = facet.getCount();
