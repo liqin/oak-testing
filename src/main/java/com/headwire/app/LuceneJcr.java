@@ -87,12 +87,17 @@ public class LuceneJcr {
         lucene.setProperty("async", "async");
         
         Node rules = lucene.addNode("indexRules", "nt:unstructured");
-        Node allProps = rules.addNode("nt:base")
-                .addNode("properties", "nt:unstructured")
-                .addNode("oaktags", "nt:unstructured");
+        Node ntBase = rules.addNode("oak:Unstructured");
+        Node props = ntBase.addNode("properties", "nt:unstructured");
+        Node allProps = props.addNode("oaktags", "nt:unstructured");
         allProps.setProperty("name", "oaktags");
         allProps.setProperty("propertyIndex", true);
         allProps.setProperty("facets", true); 
+        //Node title = props.addNode("oaktitle", "nt:unstructured");
+        //title.setProperty("name", "oaktitle");
+        //title.setProperty("nodeScopeIndex", true);
+        //title.setProperty("propertyIndex", true);
+        
         /*
         Node jcrContent = lucene.addNode("facets", "nt:unstructured")
         		.addNode("jcr:content", "nt:unstructured");
@@ -121,19 +126,22 @@ public class LuceneJcr {
         //test.setProperty("name", "torgeir");
         
         Node content = session.getRootNode().addNode("content");
+        
         Node node1 = content.addNode("node1");
-        Node test1 = node1.addNode("test");
-        test1.setProperty("title", "torgeir1");
+        Node test1 = node1.addNode("test","oak:Unstructured");
+        test1.setProperty("oaktitle", "torgeir1");
         String[] tags1 = {"tag1","tag2","tag3"};
         test1.setProperty("oaktags", tags1, 1);
+        
         Node node2 = content.addNode("node2");
-        Node test2 = node2.addNode("test");
-        test2.setProperty("title", "torgeir2");
+        Node test2 = node2.addNode("test","oak:Unstructured");
+        test2.setProperty("oaktitle", "torgeir2");
         String[] tags2 = {"tag4","tag5","tag6"};
         test2.setProperty("oaktags", tags2, 1);
+        
         Node node3 = content.addNode("node3");
-        Node test3 = node3.addNode("test");
-        test3.setProperty("title", "torgeir");
+        Node test3 = node3.addNode("test","oak:Unstructured");
+        test3.setProperty("oaktitle", "torgeir");
         String[] tags3 = {"tag7","tag8","tag9"};
         test3.setProperty("oaktags", tags3, 1);
         
@@ -150,7 +158,7 @@ public class LuceneJcr {
 
         QueryManager qm  =session.getWorkspace().getQueryManager();
         // test
-        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [nt:base] AS s WHERE ISDESCENDANTNODE([/content/node1])";
+        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [oak:Unstructured] AS s WHERE ISDESCENDANTNODE([/content/node1])";
         final Query q = qm.createQuery(myQuery, Query.JCR_SQL2);
         QueryResult result = q.execute();
         
