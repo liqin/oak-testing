@@ -85,13 +85,30 @@ public class LuceneJcr {
         lucene.setProperty("compatVersion", 2);
         lucene.setProperty("type", "lucene");
         lucene.setProperty("async", "async");
+        
         Node rules = lucene.addNode("indexRules", "nt:unstructured");
+        Node allProps = rules.addNode("nt:base")
+                .addNode("properties", "nt:unstructured")
+                .addNode("tags", "nt:unstructured");
+        allProps.setProperty("name", "tags");
+        allProps.setProperty("propertyIndex", true);
+        allProps.setProperty("facets", true); 
+        
+        Node jcrContent = lucene.addNode("facets", "nt:unstructured")
+        		.addNode("jcr:content", "nt:unstructured");
+        jcrContent.setProperty("multivalued", true);
+        Node facet = jcrContent.addNode("tags", "nt:unstructured"); 
+        facet.setProperty("multivalued", true);
+        /*
         Node allProps = rules.addNode("nt:base")
                 .addNode("properties", "nt:unstructured")
                 .addNode("allProps", "oak:Unstructured");
         allProps.setProperty("name", ".*");
         allProps.setProperty("isRegexp", true);
         allProps.setProperty("nodeScopeIndex", true);
+        allProps.setProperty("facets", true);
+        allProps.setProperty("propertyIndex", true);*/
+        
         session.save();
         session.logout();
         System.out.println("Lucene index created");
@@ -106,17 +123,17 @@ public class LuceneJcr {
         Node content = session.getRootNode().addNode("content");
         Node node1 = content.addNode("node1");
         Node test1 = node1.addNode("test");
-        test1.setProperty("name", "torgeir1");
+        test1.setProperty("title", "torgeir1");
         String[] tags1 = {"tag1","tag2","tag3"};
         test1.setProperty("tags", tags1, 1);
         Node node2 = content.addNode("node2");
         Node test2 = node2.addNode("test");
-        test2.setProperty("name", "torgeir2");
+        test2.setProperty("title", "torgeir2");
         String[] tags2 = {"tag4","tag5","tag6"};
         test2.setProperty("tags", tags2, 1);
         Node node3 = content.addNode("node3");
         Node test3 = node3.addNode("test");
-        test3.setProperty("name", "torgeir");
+        test3.setProperty("title", "torgeir");
         String[] tags3 = {"tag7","tag8","tag9"};
         test3.setProperty("tags", tags3, 1);
         
@@ -128,7 +145,7 @@ public class LuceneJcr {
     private void performQuery() throws RepositoryException, InterruptedException {
         final Session session = createAdminSession();
 
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(10);
         System.out.println("Going to perform query");
 
         QueryManager qm  =session.getWorkspace().getQueryManager();
