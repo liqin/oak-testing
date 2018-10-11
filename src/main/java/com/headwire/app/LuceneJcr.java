@@ -21,8 +21,15 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexEditorProvider;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProvider;
-import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
-import org.apache.jackrabbit.oak.plugins.segment.file.FileStore;
+import org.apache.jackrabbit.oak.segment.SegmentNodeStore;
+import org.apache.jackrabbit.oak.segment.SegmentNodeStoreBuilders;
+import org.apache.jackrabbit.oak.segment.file.FileStore;
+import org.apache.jackrabbit.oak.segment.file.FileStoreBuilder;
+import org.apache.jackrabbit.oak.segment.file.InvalidFileStoreVersionException;
+import org.apache.jackrabbit.oak.spi.blob.BlobStore;
+import org.apache.jackrabbit.oak.spi.blob.FileBlobStore;
+//import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
+//import org.apache.jackrabbit.oak.plugins.segment.file.FileStore;
 import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.jackrabbit.oak.spi.query.QueryIndexProvider;
 import org.apache.jackrabbit.oak.spi.state.NodeStore;
@@ -33,13 +40,25 @@ import org.slf4j.LoggerFactory;
 
 public class LuceneJcr {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private NodeStore nodeStore;
+    //private NodeStore nodeStore;
+    private SegmentNodeStore nodeStore;
     private Repository repository;
 
     public void initNodeStore() throws IOException {
-    	File file = new File("target/"+System.currentTimeMillis());
-        FileStore fileStore = new FileStore(file, 10000);
-        nodeStore = new SegmentNodeStore(fileStore);
+    	//File file = new File("target/"+System.currentTimeMillis());
+        //FileStore fileStore = FileStore.Builder.create(file, 1);
+    	//FileStore fileStore = FileStore.newFileStore(new File("target/"+System.currentTimeMillis())).create();
+        //nodeStore = new SegmentNodeStore(fileStore);
+    	FileStore fileStore;
+    	try {
+			fileStore = FileStoreBuilder.fileStoreBuilder(new File("Li-repository")).withBlobStore((BlobStore) new FileBlobStore("Li-repository/blob")).build();
+			nodeStore = SegmentNodeStoreBuilders.builder(fileStore).build();
+		} catch (InvalidFileStoreVersionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    	
     }
 
     public void initRepository() {
