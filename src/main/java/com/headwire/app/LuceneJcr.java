@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
@@ -37,11 +36,10 @@ import org.apache.jackrabbit.oak.segment.file.FileStoreBuilder;
 import org.apache.jackrabbit.oak.segment.file.InvalidFileStoreVersionException;
 import org.apache.jackrabbit.oak.spi.blob.BlobStore;
 import org.apache.jackrabbit.oak.spi.blob.FileBlobStore;
-//import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
-//import org.apache.jackrabbit.oak.plugins.segment.file.FileStore;
 import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.jackrabbit.oak.spi.query.QueryIndexProvider;
 import org.apache.jackrabbit.oak.query.facet.FacetResult;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,8 +75,8 @@ public class LuceneJcr {
                 .with(new LuceneIndexEditorProvider())
                 .with((QueryIndexProvider) provider)
                 .with((Observer) provider)
-                .withAsyncIndexing(); */
-        //repository = jcr.createRepository();
+                .withAsyncIndexing(); 
+        repository = jcr.createRepository(); */
     	repository = new Jcr(new Oak()).createRepository();
         System.out.println("Repository initialized");
     }
@@ -90,8 +88,8 @@ public class LuceneJcr {
         lucene.setProperty("compatVersion", 2);
         lucene.setProperty("type", "lucene");
         lucene.setProperty("async", "async");
-        String[] tags = {"taga","tagb","tagc"};
-        lucene.setProperty("tags", tags);
+        //String[] propertyNames = new String[] {"jcr:primaryType", "jcr:mixinTypes"};
+        //lucene.setProperty("propertyNames", propertyNames);
                 
         Node rules = lucene.addNode("indexRules", "nt:unstructured");
         Node ntBase = rules.addNode("oak:Unstructured");
@@ -101,15 +99,28 @@ public class LuceneJcr {
         allProps.setProperty("propertyIndex", true);
         allProps.setProperty("facets", true); 
         
+                
         //disable counter index
         /*Node counter = JcrUtils.getNodeIfExists("/oak:index/counter", session);
         if(counter != null) {
         	counter.remove();
-        }*/
+        } */
         // update nodetype index
         Node nodetype = JcrUtils.getNodeIfExists("/oak:index/nodetype", session);
         if(nodetype != null) {
-        	PropertyIterator pi = nodetype.getProperties();    
+        	nodetype.setProperty("compatVersion", 2);
+        	//nodetype.setProperty("type", "lucene");
+        	nodetype.setProperty("async", "async");
+        	nodetype.setProperty("reindex", true);
+        	Node rules2 = nodetype.addNode("indexRules", "nt:unstructured");
+            Node ntBase2 = rules2.addNode("oak:Unstructured");
+            Node props2 = ntBase2.addNode("properties", "nt:unstructured");
+            Node allProps2 = props2.addNode("oaktags", "nt:unstructured");
+            allProps2.setProperty("name", "oaktags");
+            allProps2.setProperty("propertyIndex", true);
+            allProps2.setProperty("facets", true);
+            
+            /*PropertyIterator pi = nodetype.getProperties();    
         	while(pi.hasNext()) {
         		Property property = pi.nextProperty();
         		System.out.println("property name is: " + property.getName());
@@ -122,19 +133,8 @@ public class LuceneJcr {
         		} else {
         			System.out.println("property value is: " + property.getValue());
         		}
-        	}
-        	nodetype.setProperty("compatVersion", 2);
-        	nodetype.setProperty("type", "lucene");
-        	nodetype.setProperty("async", "async");
-        	nodetype.setProperty("reindex", true);
-        	Node rules2 = nodetype.addNode("indexRules", "nt:unstructured");
-            Node ntBase2 = rules2.addNode("oak:Unstructured");
-            Node props2 = ntBase2.addNode("properties", "nt:unstructured");
-            Node allProps2 = props2.addNode("oaktags", "nt:unstructured");
-            allProps2.setProperty("name", "oaktags");
-            allProps2.setProperty("propertyIndex", true);
-            allProps2.setProperty("facets", true); 
-            //nodetype.remove();	
+        	} */
+            	
         } 
         //Node title = props.addNode("oaktitle", "nt:unstructured");
         //title.setProperty("name", "oaktitle");
