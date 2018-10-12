@@ -36,7 +36,6 @@ import org.apache.jackrabbit.oak.spi.blob.FileBlobStore;
 //import org.apache.jackrabbit.oak.plugins.segment.file.FileStore;
 import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.jackrabbit.oak.spi.query.QueryIndexProvider;
-import org.apache.jackrabbit.oak.spi.state.NodeStore;
 import org.apache.jackrabbit.oak.query.facet.FacetResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,19 +79,28 @@ public class LuceneJcr {
 
     public void createLuceneIndex() throws RepositoryException {
         Session session = createAdminSession();
-        Node lucene = JcrUtils.getOrCreateByPath("/oak:index/lucene", "oak:Unstructured",
+        Node lucene = JcrUtils.getOrCreateByPath("/oak:index/lucene-with-facets", "oak:Unstructured",
                 "oak:QueryIndexDefinition", session, false);
         lucene.setProperty("compatVersion", 2);
         lucene.setProperty("type", "lucene");
         lucene.setProperty("async", "async");
+        String[] tags = {"taga","tagb","tagc"};
+        lucene.setProperty("tags", tags);
         
         Node rules = lucene.addNode("indexRules", "nt:unstructured");
-        Node ntBase = rules.addNode("oak:Unstructured");
+        Node ntBase = rules.addNode("nt:base");
         Node props = ntBase.addNode("properties", "nt:unstructured");
         Node allProps = props.addNode("oaktags", "nt:unstructured");
         allProps.setProperty("name", "oaktags");
         allProps.setProperty("propertyIndex", true);
         allProps.setProperty("facets", true); 
+        
+        // disable counter index
+        /*Node counter = JcrUtils.getNodeIfExists("/oak:index/counter", session);
+        if(counter != null) {
+        	System.out.println("counter index existed, now removing");
+        	counter.remove();
+        } */
         //Node title = props.addNode("oaktitle", "nt:unstructured");
         //title.setProperty("name", "oaktitle");
         //title.setProperty("nodeScopeIndex", true);
@@ -128,19 +136,19 @@ public class LuceneJcr {
         Node content = session.getRootNode().addNode("content");
         
         Node node1 = content.addNode("node1");
-        Node test1 = node1.addNode("test","oak:Unstructured");
+        Node test1 = node1.addNode("test");
         test1.setProperty("oaktitle", "torgeir1");
         String[] tags1 = {"tag1","tag2","tag3"};
         test1.setProperty("oaktags", tags1, 1);
         
         Node node2 = content.addNode("node2");
-        Node test2 = node2.addNode("test","oak:Unstructured");
+        Node test2 = node2.addNode("test");
         test2.setProperty("oaktitle", "torgeir2");
         String[] tags2 = {"tag4","tag5","tag6"};
         test2.setProperty("oaktags", tags2, 1);
         
         Node node3 = content.addNode("node3");
-        Node test3 = node3.addNode("test","oak:Unstructured");
+        Node test3 = node3.addNode("test");
         test3.setProperty("oaktitle", "torgeir");
         String[] tags3 = {"tag7","tag8","tag9"};
         test3.setProperty("oaktags", tags3, 1);
@@ -158,14 +166,22 @@ public class LuceneJcr {
 
         QueryManager qm  =session.getWorkspace().getQueryManager();
         // test
-        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [oak:Unstructured] AS s WHERE ISDESCENDANTNODE([/content/node1])";
+        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [nt:base] AS s WHERE ISDESCENDANTNODE([/content/node1]) option(index tag [taga])";
         final Query q = qm.createQuery(myQuery, Query.JCR_SQL2);
         QueryResult result = q.execute();
+        
+        /*for(int i=0; i<result.getColumnNames().length; i++){
+            System.out.println("value: " + result.getColumnNames()[i]);
+        } */
         
         RowIterator rows = result.getRows();
         while(rows.hasNext()){
              Row row = rows.nextRow();
              System.out.println("row path: "+ row.getPath());
+             /*for(int i=0; i<row.getValues().length; i++){
+                 System.out.println("value: " + row.getValues()[i]);
+             }*/
+
             
         }
         
@@ -194,7 +210,6 @@ public class LuceneJcr {
                 return r.getNodes().hasNext();
             }
         }, 105, 200); */
-
         System.out.println(q.execute().getNodes().next());
     }
 
