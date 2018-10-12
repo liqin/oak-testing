@@ -13,7 +13,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 	</properties>
 
 	<dependencies>
-		<dependency>
+		<!-- <dependency>
 		  <groupId>org.apache.jackrabbit</groupId>
 		  <artifactId>oak-jcr</artifactId>
 		  <version>1.9.8</version>
@@ -37,7 +37,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 		    <groupId>org.apache.jackrabbit</groupId>
 		    <artifactId>oak-commons</artifactId>
 		    <version>1.9.8</version>
-		</dependency> 
+		</dependency> -->
 		<dependency>
 		    <groupId>org.apache.jackrabbit</groupId>
 		    <artifactId>oak-run</artifactId>
