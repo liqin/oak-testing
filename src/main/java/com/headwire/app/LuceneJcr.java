@@ -11,10 +11,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -22,6 +26,7 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexEditorProvider;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProvider;
@@ -66,14 +71,15 @@ public class LuceneJcr {
     }
 
     public void initRepository() {
-        LuceneIndexProvider provider = new LuceneIndexProvider();
+        /*LuceneIndexProvider provider = new LuceneIndexProvider();
         Jcr jcr = new Jcr(nodeStore)
                 .withAsyncIndexing()
                 .with(new LuceneIndexEditorProvider())
                 .with((QueryIndexProvider) provider)
                 .with((Observer) provider)
-                .withAsyncIndexing();
-        repository = jcr.createRepository();
+                .withAsyncIndexing(); */
+        //repository = jcr.createRepository();
+    	repository = new Jcr(new Oak()).createRepository();
         System.out.println("Repository initialized");
     }
 
@@ -86,21 +92,50 @@ public class LuceneJcr {
         lucene.setProperty("async", "async");
         String[] tags = {"taga","tagb","tagc"};
         lucene.setProperty("tags", tags);
-        
+                
         Node rules = lucene.addNode("indexRules", "nt:unstructured");
-        Node ntBase = rules.addNode("nt:base");
+        Node ntBase = rules.addNode("oak:Unstructured");
         Node props = ntBase.addNode("properties", "nt:unstructured");
         Node allProps = props.addNode("oaktags", "nt:unstructured");
         allProps.setProperty("name", "oaktags");
         allProps.setProperty("propertyIndex", true);
         allProps.setProperty("facets", true); 
         
-        // disable counter index
+        //disable counter index
         /*Node counter = JcrUtils.getNodeIfExists("/oak:index/counter", session);
         if(counter != null) {
-        	System.out.println("counter index existed, now removing");
         	counter.remove();
-        } */
+        }*/
+        // update nodetype index
+        Node nodetype = JcrUtils.getNodeIfExists("/oak:index/nodetype", session);
+        if(nodetype != null) {
+        	PropertyIterator pi = nodetype.getProperties();    
+        	while(pi.hasNext()) {
+        		Property property = pi.nextProperty();
+        		System.out.println("property name is: " + property.getName());
+        		if(property.isMultiple()) {
+        			for (Value value:property.getValues())
+        	        {
+        	            System.out.println("property value is: " + value);
+        	        }
+
+        		} else {
+        			System.out.println("property value is: " + property.getValue());
+        		}
+        	}
+        	nodetype.setProperty("compatVersion", 2);
+        	nodetype.setProperty("type", "lucene");
+        	nodetype.setProperty("async", "async");
+        	nodetype.setProperty("reindex", true);
+        	Node rules2 = nodetype.addNode("indexRules", "nt:unstructured");
+            Node ntBase2 = rules2.addNode("oak:Unstructured");
+            Node props2 = ntBase2.addNode("properties", "nt:unstructured");
+            Node allProps2 = props2.addNode("oaktags", "nt:unstructured");
+            allProps2.setProperty("name", "oaktags");
+            allProps2.setProperty("propertyIndex", true);
+            allProps2.setProperty("facets", true); 
+            //nodetype.remove();	
+        } 
         //Node title = props.addNode("oaktitle", "nt:unstructured");
         //title.setProperty("name", "oaktitle");
         //title.setProperty("nodeScopeIndex", true);
@@ -136,19 +171,19 @@ public class LuceneJcr {
         Node content = session.getRootNode().addNode("content");
         
         Node node1 = content.addNode("node1");
-        Node test1 = node1.addNode("test");
+        Node test1 = node1.addNode("test", "oak:Unstructured");
         test1.setProperty("oaktitle", "torgeir1");
         String[] tags1 = {"tag1","tag2","tag3"};
         test1.setProperty("oaktags", tags1, 1);
         
         Node node2 = content.addNode("node2");
-        Node test2 = node2.addNode("test");
+        Node test2 = node2.addNode("test", "oak:Unstructured");
         test2.setProperty("oaktitle", "torgeir2");
         String[] tags2 = {"tag4","tag5","tag6"};
         test2.setProperty("oaktags", tags2, 1);
         
         Node node3 = content.addNode("node3");
-        Node test3 = node3.addNode("test");
+        Node test3 = node3.addNode("test", "oak:Unstructured");
         test3.setProperty("oaktitle", "torgeir");
         String[] tags3 = {"tag7","tag8","tag9"};
         test3.setProperty("oaktags", tags3, 1);
@@ -166,7 +201,7 @@ public class LuceneJcr {
 
         QueryManager qm  =session.getWorkspace().getQueryManager();
         // test
-        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [nt:base] AS s WHERE ISDESCENDANTNODE([/content/node1]) option(index tag [taga])";
+        String myQuery = "SELECT [jcr:path], [rep:facet(oaktags)] FROM [oak:Unstructured] AS s WHERE ISDESCENDANTNODE([/content/node1])";
         final Query q = qm.createQuery(myQuery, Query.JCR_SQL2);
         QueryResult result = q.execute();
         
@@ -210,7 +245,9 @@ public class LuceneJcr {
                 return r.getNodes().hasNext();
             }
         }, 105, 200); */
-        System.out.println(q.execute().getNodes().next());
+        if(q.execute().getNodes().hasNext()) {
+        	System.out.println(q.execute().getNodes().next());
+        }
     }
 
     private Session createAdminSession() throws RepositoryException {
